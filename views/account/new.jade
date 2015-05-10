@@ -1,0 +1,19 @@
+extends ../layout
+
+block content
+  h1 #{title}
+  form(action="/account" method="post")
+    div
+      label(for="username") Username
+      input(type="text" id="username" name="user[username]")
+    div
+      label(for="email") Email
+      input(type="email" id="email" name="user[email]")
+    div
+      label(for="password") Password
+      input(type="password" id="password" name="user[password]")
+    div
+      label(for="password_confirm") Confirm Password
+      input(type="password" id="password_confirm" name="password_confirm")
+    div
+      input(type="submit" value="register")
