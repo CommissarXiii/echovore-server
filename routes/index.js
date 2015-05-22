@@ -1,4 +1,4 @@
 module.exports = function(app) {
 
-  app.use('/account', require('./routers/account'))
+  app.use('/registration', require('./routers/registration'))
 }
