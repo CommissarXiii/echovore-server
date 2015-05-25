@@ -1,0 +1,24 @@
+{
+  "development": {
+    "username": "echovore_admin",
+    "password": "GDfLeK!s$O64",
+    "database": "echovore_development",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "echovore_admin",
+    "password": "GDfLeK!s$O64",
+    "database": "echovore_test",
+    "host": "127.0.0.1",
+    "dialect": "postgres",
+    "logging": false
+  },
+  "production": {
+    "username": "echovore_admin",
+    "password": "GDfLeK!s$O64",
+    "database": "echovore_production",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  }
+}
