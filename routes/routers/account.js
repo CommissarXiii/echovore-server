@@ -70,4 +70,71 @@ router.post('/', function(req, res, next) {
   });
 });
 
+router.get('/verify', function(req, res, next) {
+
+  req.checkQuery('token', 'Token is required').notEmpty();
+  req.checkQuery('email', 'Email is required').notEmpty();
+
+  var errors = req.validationErrors();
+
+  if(errors) {
+
+    errors = errors.map(function(error) {
+      return {
+        detail: error.msg,
+        source: {
+          parameter: error.param
+        }
+      }
+    })
+
+    return res.status(400).json({
+      errors: errors
+    });
+  }
+
+  models.UserToken.find({
+    where: {
+      hash: req.query.token
+    },
+    include: [
+      {model: models.User, where: {email: req.query.email}}
+    ]
+  })
+  .then(function(userToken) {
+
+    if(!userToken) {
+
+      throw new Error('Invalid token');
+    }
+
+    return models.sequelize.transaction(function(t) {
+
+      return userToken.User.updateAttributes({
+        active: true
+      }, {transaction: t})
+      .then(function() {
+
+        return userToken.destroy({transaction: t});
+      });
+    });
+  })
+  .then(function() {
+
+    res.status(200).send('ok')
+  })
+  .catch(function(err) {
+
+    res.status(400).json({
+      errors: [
+        {
+          details: err.message
+        }
+      ]
+    });
+  })
+})
+
+
+
 module.exports = router;

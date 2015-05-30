@@ -6,9 +6,14 @@ var expect = require('chai').expect;
 
 describe('Registration', function(){
 
-  describe('POST /registration', function() {
+  var registration = {
+    username: 'valid_-.@',
+    password: 'T3stT3st!',
+    email: 'valid@email.com'
+  }
 
-    var registration = {};
+  describe('POST /account', function() {
+
     var agent = request(app);
 
     beforeEach(function() {
@@ -26,12 +31,12 @@ describe('Registration', function(){
       registration.password = 'nogood';
       registration.email = 'invalidemail';
 
-      agent.post('/registration').send(registration).expect(400).end(done);
+      agent.post('/account').send(registration).expect(400).end(done);
     });
 
     it('should create a new user', function(done) {
 
-      agent.post('/registration').send(registration).expect(201).end(function(res) {
+      agent.post('/account').send(registration).expect(201).end(function(res) {
 
         models.User.find({
           where: {
@@ -48,8 +53,38 @@ describe('Registration', function(){
 
     it('should not allow duplicate registrations', function(done) {
 
-      agent.post('/registration').send(registration).expect(400).end(done);
+      agent.post('/account').send(registration).expect(400).end(done);
     });
 
   });
+
+  describe('GET /account/verify', function() {
+
+    var token;
+    var agent = request(app);
+
+    before(function(done) {
+
+      models.UserToken.find({
+        include: [
+          {model: models.User, where: {username: registration.username}}
+        ]
+      })
+      .then(function(userToken) {
+
+        token = userToken;
+        done();
+      })
+    })
+
+    it('should verify a token', function(done) {
+
+      agent.get('/account/verify').query({
+        token: token.hash,
+        email: registration.email
+      })
+      .expect(200)
+      .end(done);
+    });
+  })
 });
