@@ -27,50 +27,47 @@ router.post('/', function(req, res, next) {
     });
   }
 
-  function findRegistration(username) {
+  models.User.find({
+    where: {
+      username: req.body.username
+    }
+  })
+  .then(function(user) {
 
-    return models.Registration.find({
-      where: {
-        username: username
-      }
-    })
-  }
-
-  function findUser(username) {
-
-    return models.User.find({
-      where: {
-        username: username
-      }
-    })
-  }
-
-  Promise.join(findRegistration(req.body.username), findUser(req.body.username),
-  function(registration, user) {
-
-    if(registration || user) {
-      throw new Error('Username is already in use');
+    if(user) {
+      throw new Error('User already exists');
     }
 
-    return models.Registration.create({
-      username: req.body.username,
-      password: req.body.password,
-      email: req.body.email
+    return models.sequelize.transaction(function(t) {
+
+      return models.User.create({
+        username: req.body.username,
+        password: req.body.password,
+        email: req.body.email
+      }, {transaction: t})
+      .then(function(user) {
+
+        return models.UserToken.create({}, {transaction: t})
+        .then(function(token) {
+          return token.setUser(user, {transaction: t});
+        });
+      });
     });
   })
-  .then(function(registration) {
+  .then(function() {
 
-    // TODO send registration email
-    res.status(201).send('ok');
+    res.status(201).send('ok')
   })
   .catch(function(err) {
 
     res.status(400).json({
-      errors: [{
-        detail: err.message
-      }]
+      errors: [
+        {
+          details: err.message
+        }
+      ]
     });
   });
-})
+});
 
 module.exports = router;

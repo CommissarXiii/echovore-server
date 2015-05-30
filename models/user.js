@@ -5,9 +5,31 @@ module.exports = function(sequelize, DataTypes) {
   var User = sequelize.define('User', {
     username: DataTypes.STRING,
     password: DataTypes.STRING,
-    email: DataTypes.STRING
+    email: DataTypes.STRING,
+    active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    }
   },
   {
+    hooks: {
+      beforeCreate: function(user) {
+
+        return User.hashPassword(user.password)
+        .then(function(hash) {
+          user.password = hash;
+          return Promise.resolve(user);
+        });
+      },
+      beforeUpdate: function(user) {
+
+        return User.hashPassword(user.password)
+        .then(function(hash) {
+          user.password = hash;
+          return Promise.resolve(user);
+        });
+      }
+    },
     classMethods: {
       hashPassword: function(password) {
 
@@ -33,9 +55,9 @@ module.exports = function(sequelize, DataTypes) {
       }
     },
     tableName: 'user',
-    freezeTableNames: true,
+    freezeTableName: true,
     underscored: true
-  })
+  });
 
   return User;
 }

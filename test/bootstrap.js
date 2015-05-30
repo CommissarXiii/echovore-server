@@ -7,5 +7,8 @@ before(function(done) {
 
     done();
   })
+  .catch(function(err) {
 
+    done(err);
+  });
 });

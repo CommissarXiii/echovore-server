@@ -6,15 +6,6 @@ var expect = require('chai').expect;
 
 describe('Registration', function(){
 
-  before(function(done) {
-    
-    models.Registration.destroy({truncate: true})
-    .then(function() {
-      done();
-    });
-
-  });
-
   describe('POST /registration', function() {
 
     var registration = {};
@@ -29,7 +20,7 @@ describe('Registration', function(){
       }
     });
 
-    it('should validate params', function(done) {
+    it('should validate inputs', function(done) {
 
       registration.username = 'a!';
       registration.password = 'nogood';
@@ -38,29 +29,25 @@ describe('Registration', function(){
       agent.post('/registration').send(registration).expect(400).end(done);
     });
 
-    it('should create a new registration', function(done) {
+    it('should create a new user', function(done) {
 
       agent.post('/registration').send(registration).expect(201).end(function(res) {
 
-        models.Registration.find({
+        models.User.find({
           where: {
             username: registration.username
           }
         })
-        .then(function(registration) {
+        .then(function(user) {
 
-          expect(registration).to.exist;
+          expect(user).to.exist;
           done();
-        })
-        .catch(function(err) {
-
-          throw err;
         });
       });
     });
 
     it('should not allow duplicate registrations', function(done) {
-      
+
       agent.post('/registration').send(registration).expect(400).end(done);
     });
 
