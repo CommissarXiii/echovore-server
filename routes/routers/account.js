@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var models = require('../../models');
 var Promise = require('bluebird');
+var config = require('../../config/config.json');
+var jwt = require('jsonwebtoken');
 
 router.post('/', function(req, res, next) {
 
@@ -135,6 +137,70 @@ router.get('/verify', function(req, res, next) {
   })
 })
 
+router.post('/login', function(req, res, next) {
 
+  req.checkBody('username', 'Username is required').notEmpty();
+  req.checkBody('password', 'Password is required').notEmpty();
+
+  // validation errors
+  var errors = req.validationErrors();
+
+  if(errors) {
+
+    errors = errors.map(function(error) {
+      return {
+        detail: error.msg,
+        source: {
+          parameter: error.param
+        }
+      }
+    });
+
+    return res.status(400).json({
+      errors: errors
+    });
+  }
+
+  models.User.find({
+    where: {
+      username: req.body.username,
+      active: true
+    }
+  })
+  .then(function(user) {
+
+    if(!user) {
+      throw new Error('Invalid authentication');
+    }
+
+    return user.validatePassword(req.body.password)
+    .then(function(success) {
+
+      if(!success) {
+
+        throw new Error('Invalid authentication');
+      }
+
+      var token = jwt.sign(user, config.key, {
+        expiresInMinutes: 1440
+      });
+
+      res.status(200).json({
+        token: token
+      })
+    })
+  })
+  .catch(function(err) {
+
+    res.status(400).json({
+      errors: [
+        {
+          details: err.message
+        }
+      ]
+    });
+  });
+
+});
 
 module.exports = router;

@@ -1,3 +1,4 @@
+var Promise = require('bluebird');
 var bcrypt = require('bcryptjs');
 
 module.exports = function(sequelize, DataTypes) {
@@ -12,6 +13,9 @@ module.exports = function(sequelize, DataTypes) {
     }
   },
   {
+    tableName: 'user',
+    freezeTableName: true,
+    underscored: true,
     hooks: {
       beforeCreate: function(user) {
 
@@ -22,6 +26,11 @@ module.exports = function(sequelize, DataTypes) {
         });
       },
       beforeUpdate: function(user) {
+
+        if(user.previous('password') === user.password) {
+
+          return Promise.resolve(user);
+        }
 
         return User.hashPassword(user.password)
         .then(function(hash) {
@@ -48,15 +57,29 @@ module.exports = function(sequelize, DataTypes) {
               }
 
               return resolve(hash);
-
             });
           });
         });
       }
     },
-    tableName: 'user',
-    freezeTableName: true,
-    underscored: true
+    instanceMethods: {
+      validatePassword: function(password) {
+
+        var self = this;
+
+        return new Promise(function(resolve, reject) {
+
+          bcrypt.compare(password, self.password, function(err, result) {
+
+            if(err) {
+              return reject(err);
+            }
+
+            return resolve(result);
+          })
+        });
+      }
+    }
   });
 
   return User;

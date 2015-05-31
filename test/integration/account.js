@@ -77,7 +77,7 @@ describe('Registration', function(){
       })
     })
 
-    it('should verify a token', function(done) {
+    it('should verify an account registration', function(done) {
 
       agent.get('/account/verify').query({
         token: token.hash,
@@ -86,5 +86,24 @@ describe('Registration', function(){
       .expect(200)
       .end(done);
     });
-  })
+  });
+
+  describe('POST /account/token', function() {
+
+    var agent = request(app);
+
+    it('should return a token for successful authentication', function(done) {
+
+      agent.post('/account/login').send(registration).expect(200).end(function(err, res) {
+
+        if(err) {
+          return done(err);
+        }
+
+        expect(res.body.token).to.exist;
+
+        done();
+      });
+    });
+  });
 });
